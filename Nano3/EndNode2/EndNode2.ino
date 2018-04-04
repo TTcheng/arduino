@@ -4,8 +4,10 @@
  */
 const int OneSec = 1000;
 const int HalfSec = 500;
-const char *COMMAND = "wakeup";
+const char *WAKEUP = "wakeup";
 const char *COMMAND_ERROR = "commanderror";
+const char *POWER = "power";
+const char *POWER_ON = "power2_on";
 int sensorPin = 2;
 
 void setup() {
@@ -32,19 +34,16 @@ void process(){
       j++;
   }
   command[j]='\0';
-  if(isCommand(command)){                             //start detecting
+  if(strcmp(command,WAKEUP)==0){                             //start detecting
     bool hasHuman = detectSec(30);
     if(hasHuman)
       Serial.write("yes");                //write to serial to notify control node
     else Serial.write("no");
-    Serial.flush();                   //clear repeated command
+  }else if(strcmp(command,POWER)==0){
+      Serial.write(POWER_ON);
   }
   else Serial.write(COMMAND_ERROR);
-}
-bool isCommand(char cmd[]){
-  if(strcmp(cmd,COMMAND)==0)
-    return true;
-  else return false;
+    Serial.flush();                   //clear repeated command
 }
 /**
  * detecting mankind in Seconds
