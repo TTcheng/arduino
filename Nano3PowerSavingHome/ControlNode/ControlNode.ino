@@ -1,7 +1,11 @@
 /**
-   ControlNode besides the door with infrared ray
+* ControlNode besides the door with infrared ray
 */
-const char *WAKE_UP = "wakeup";
+const char *WAKE_UP1 = "wakeup1";
+const char *WAKE_UP2 = "wakeup2";
+const char *WAKE_UP3 = "wakeup3";
+const char *WAKE_UP4 = "wakeup4";
+
 const char *COMMAND_ERROR = "commanderror";
 const char *HUMAN_DETECTED = "yes";
 const char *HUMAN_UNDETECTED = "no";
@@ -11,19 +15,29 @@ const char *POWER2_ON = "power2_on";
 const char *POWER3_ON = "power3_on";
 const char *POWER4_ON = "power4_on";
 
-const bool HUMAN_IN = true;
-const bool HUMAN_NONE = false;
+//const bool HUMAN_IN = true;
+//const bool HUMAN_NONE = false;
 const bool EP_PWR_ON = true;
 const bool EP_PWR_OFF = false;
+//const bool DOOR_OPEN = true;
+//const bool DOOR_CLOSE = false;
 
-const int ALL_DENIED = 4;
-const int ALL_RECIEVED = 4;
+const int DEVICES = 4;
+//const int ALL_RECIEVED = 4;
+const int WAKEUP_INTERVAL = 12;//wakeup next node 12 s after last node
 const int ONE_SEC = 1000;
+const int PWR_QUERY_TIME = 86400;
 const int CHECK_TIME = 180; //check response in 3 min after power query sended
 int sensorPin = 2;   //infrared ray reciever endpotint
 int timer = 0;
-int denies = 0;     //the quantity of HUMAN_UNDETECTED responses
-int responses = 0;  //responses >= denies
+int door_status = LOW;//????????
+int wakeup_timer = 0;//time counter for wake up events
+int door_event = 0; //door event queue 0 for no door event
+int wakeups  = 0;   //the quantity of sended wake up commands
+//int denies = 0;     //the quantity of HUMAN_UNDETECTED responses
+//int responses = 0;  //responses >= denies
+bool human_detected = false;
+bool in_wakingup = false;
 bool power_status[5] = {EP_PWR_ON};
 bool power_query_in_waiting = false;
 
@@ -35,27 +49,46 @@ void setup() {
 }
 
 void loop() {
-  if (detecting()) {    //detected door event
-    turnLightON();      //turn off the light power
-    wakeup();           //wakeup end nodes
-    //then delay 30 s to avoid repeatedly doorEvent
-    delay(30 * ONE_SEC);
-  }
+  detectDoorEvent();
+  processDoorEvent();
   if (Serial.available() > 0) { //msg event
     delay(20);
-    if (processFedback() == HUMAN_NONE) {
-      turnLightOFF();      //turn off the light power
-    }
+    processFedback();
   }
-  if (timer > CHECK_TIME) { //check power response
+  if (power_query_in_waiting && timer > CHECK_TIME) {
     checkPowerResponse();
     timer = 0;              //reset timer
+  }
+  if (timer > PWR_QUERY_TIME) {
+    powerQuery();
+    timer = 0;
   }
   delay(ONE_SEC);
   timer++;
 }
-
-bool processFedback() {
+void processDoorEvent() {
+  if (door_event > 0) {
+    door_event --;
+    turnLightON();    //turn off the light power
+    //    responses = 0;
+    //    denies = 0;
+    in_wakingup = true;
+    human_detected = false;
+    wakeup();           //start waking up end nodes
+  }
+  if (in_wakingup) {
+    if (wakeup_timer > WAKEUP_INTERVAL) {//time out and no response: wake up next  or  end of wake up.if has response ,processed in fedback
+      if (wakeups < DEVICES) { //human status uncertain
+        wakeup();             //wake up next end node
+      } else {                //no human in the room
+        in_wakingup = false;  //end of waking up
+      }
+    } else {                   //not the time
+      wakeup_timer++;
+    }
+  }
+}
+void processFedback() {
   int j = 0;
   char msg[20];
   while (Serial.available() > 0) {  //read feedback
@@ -65,9 +98,14 @@ bool processFedback() {
   msg[j] = '\0';                     //end char of string
   //handle feedback
   if (strcmp(msg, HUMAN_DETECTED) == 0) {   //human detected
-    responses++;
+    //    responses++;
+    human_detected = true;
+    in_wakingup = false;              //end of waking up
   } else if (strcmp(msg, HUMAN_UNDETECTED) == 0) { //human undetected
-    responses++;
+    //    responses++;
+    if (in_wakingup && wakeups < DEVICES) {      //human status uncertain
+      wakeup();                                //wake up next end node
+    }
   }
   //if power_query_in_waiting change power status
   if (power_query_in_waiting) {
@@ -81,19 +119,21 @@ bool processFedback() {
       power_status[4] = EP_PWR_ON;
     }
   }
-  //exist none-response end point
-  if (responses < ALL_RECIEVED) {
+  /*
+    //exist none-response end point
+    if (responses < ALL_RECIEVED) {
     powerQuery();
-  }
-  //nonexistent end points found human
-  if (denies == ALL_DENIED) {
-    return HUMAN_NONE;
-  } else return HUMAN_IN;
+    }*/
+
+
+  //  if (denies == DEVICES) { //All denied
+  //    return HUMAN_NONE;
+  //  } else return HUMAN_IN;
 }
 void powerQuery() {
   Serial.write(POWER);            //send query command
   power_query_in_waiting = true;  //power query in waiting
-  power_status[1] = EP_PWR_OFF;   //reset power status
+  power_status[1] = EP_PWR_OFF;   //set all devices power status (off)
   power_status[2] = EP_PWR_OFF;
   power_status[3] = EP_PWR_OFF;
   power_status[4] = EP_PWR_OFF;
@@ -108,6 +148,7 @@ void checkPowerResponse() {
     itr++;
   }
   power_query_in_waiting = false;
+  timer = 0;
 }
 void notifyBatteryReplace(int ep_id) {
   //
@@ -119,14 +160,25 @@ void turnLightON() {
   digitalWrite(LED_BUILTIN, HIGH);
 }
 void wakeup() {
-  Serial.write(WAKE_UP);
-  responses = 0;
-  denies = 0;
-}
-bool detecting() {
-  if (digitalRead(sensorPin) == HIGH) {
-    return true;
+  wakeup_timer = 0;
+  wakeups++;
+  switch (wakeups) {
+    case 0: Serial.write(WAKE_UP1); break;
+    case 1: Serial.write(WAKE_UP2); break;
+    case 2: Serial.write(WAKE_UP3); break;
+    case 3: Serial.write(WAKE_UP4); break;
+    default: break;
   }
-  return false;
+}
+void detectDoorEvent() {
+  int sensorValue = digitalRead(sensorPin); //LOW 有遮挡物，门开 HIGH 无遮挡物，门关
+  if (sensorValue != door_status) {
+    door_status = sensorValue;
+    if (sensorValue == LOW) {  //HIGH->LOW door open
+      door_event ++;           //door event detected ,add to event queue;
+    } else if (sensorValue == HIGH) { //LOW -> HIGH door close
+      door_event ++;
+    }
+  }
 }
 
