@@ -1,13 +1,13 @@
-int sensorPin = A0;
-int pressValue = 0;
 void setup() {
   // put your setup code here, to run once:
+  pinMode(2,OUTPUT);
   Serial.begin(9600);
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  pressValue = analogRead(sensorPin);
-  Serial.println(pressValue);
-  delay(500);
+  digitalWrite(2,HIGH);
+  delay(1000);
+  digitalWrite(2,LOW);
+  delay(3000);
 }

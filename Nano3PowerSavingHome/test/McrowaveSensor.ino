@@ -11,10 +11,12 @@ void loop() {
   // put your main code here, to run repeatedly:
   if(digitalRead(sensorPin)==HIGH){
     digitalWrite(LED_BUILTIN,HIGH);
-    Serial.println(true);
+    Serial.write("Human");
     delay(1000);
     digitalWrite(LED_BUILTIN,LOW);
   }else{
-    delay(100);
+    Serial.write("None");
+    delay(1000);
   }
+  Serial.println();
 }

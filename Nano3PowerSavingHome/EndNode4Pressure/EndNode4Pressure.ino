@@ -8,11 +8,16 @@ const char *WAKEUP = "wakeup";
 const char *COMMAND_ERROR = "commanderror";
 const char *POWER = "power";
 const char *POWER_ON = "power4_on";
-const int STANDARD_PRESSURE = 1000;
+const int STANDARD_PRESSURE = 200;
 int sensorPin1 = A0;
 int sensorPin2 = A1;
 int sensorPin3 = A2;
 int sensorPin4 = A3;
+
+int powerPin1 = 2;
+int powerPin2 = 3;
+int powerPin3 = 4;
+int powerPin4 = 5;
 
 void setup() {
   // put your setup code here, to run once:
@@ -20,6 +25,11 @@ void setup() {
   pinMode(sensorPin2, INPUT);
   pinMode(sensorPin3, INPUT);
   pinMode(sensorPin4, INPUT);
+  pinMode(powerPin1,OUTPUT);
+  pinMode(powerPin2,OUTPUT);
+  pinMode(powerPin3,OUTPUT);
+  pinMode(powerPin4,OUTPUT);
+  pinMode(LED_BUILTIN,OUTPUT);
   Serial.begin(9600);
 }
 
@@ -42,9 +52,13 @@ void process() {
   }
   command[j] = '\0';
   if (strcmp(command, WAKEUP) == 0) {                        //start detecting
-    bool hasHuman = detectSec(30);
-    if (hasHuman)
+    bool hasHuman = detectSec(5);
+    if (hasHuman){
       Serial.write("yes");                //write to serial to notify control node
+      digitalWrite(LED_BUILTIN,HIGH);
+      delay(1000);
+      digitalWrite(LED_BUILTIN,LOW);
+    }
     else Serial.write("no");
   } else if (strcmp(command, POWER) == 0) {
     Serial.write(POWER_ON);
@@ -59,6 +73,10 @@ bool detectSec(int s) {
   int i, times = 0;
   int totalpressure = 0;
   int pressure[4] = {0};
+  digitalWrite(powerPin1,HIGH);
+  digitalWrite(powerPin2,HIGH);
+  digitalWrite(powerPin3,HIGH);
+  digitalWrite(powerPin4,HIGH);
   for (i = 0; i < s; i++) {
     pressure[0] += analogRead(sensorPin1);
     pressure[1] += analogRead(sensorPin2);
@@ -70,6 +88,10 @@ bool detectSec(int s) {
     pressure[i] /= s;
     totalpressure += pressure[i];
   }
+  digitalWrite(powerPin1,LOW);
+  digitalWrite(powerPin2,LOW);
+  digitalWrite(powerPin3,LOW);
+  digitalWrite(powerPin4,LOW);
   if (totalpressure > STANDARD_PRESSURE)
     return true;
   else return false;

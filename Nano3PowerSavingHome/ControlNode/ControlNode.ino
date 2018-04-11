@@ -172,6 +172,7 @@ void wakeup() {
 }
 void detectDoorEvent() {
   int sensorValue = digitalRead(sensorPin); //LOW 有遮挡物，门开 HIGH 无遮挡物，门关
+  Serial.write(sensorValue);
   if (sensorValue != door_status) {
     door_status = sensorValue;
     if (sensorValue == LOW) {  //HIGH->LOW door open
