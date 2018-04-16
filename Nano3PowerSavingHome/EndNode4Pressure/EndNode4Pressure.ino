@@ -4,7 +4,7 @@
 */
 const int OneSec = 1000;
 const int HalfSec = 500;
-const char *WAKEUP = "wakeup";
+const char *WAKEUP = "wakeup4";
 const char *COMMAND_ERROR = "commanderror";
 const char *POWER = "power";
 const char *POWER_ON = "power4_on";
@@ -14,7 +14,7 @@ int sensorPin2 = A1;
 int sensorPin3 = A2;
 int sensorPin4 = A3;
 
-int powerPin1 = 2;
+int powerPin1 = 2;`
 int powerPin2 = 3;
 int powerPin3 = 4;
 int powerPin4 = 5;

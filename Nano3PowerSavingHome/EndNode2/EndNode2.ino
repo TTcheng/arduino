@@ -1,15 +1,14 @@
 /**
-    InfraredHumanDetectingNode in the room
-
+ * InfraredHumanDetectingNode in the room
 */
 const int OneSec = 1000;
 const int HalfSec = 500;
-const char *WAKEUP = "wakeup";
+const char *WAKEUP = "wakeup2";
 const char *COMMAND_ERROR = "commanderror";
 const char *POWER = "power";
 const char *POWER_ON = "power2_on";
 int sensorPin = 2;
-int powerPin = 3;
+//int powerPin = 3;
 int turntablePin1 = 4;
 int turntablePin2 = 5;
 bool reverse = false;
@@ -19,11 +18,11 @@ void setup() {
   pinMode(sensorPin, INPUT);
   pinMode(turntablePin1, OUTPUT);
   pinMode(turntablePin2, OUTPUT);
-  pinMode(powerPin, OUTPUT);
+//  pinMode(powerPin, OUTPUT);
   Serial.begin(9600);
 }
 
-void loop() {
+void loop() { 
   // put your main code here, to run repeatedly:
   if (Serial.available() > 0) {
     delay(20);
@@ -68,7 +67,7 @@ bool detectSec(int s) {
     digitalWrite(turntablePin2, HIGH);
   }
   reverse = !reverse;                   //reverse turn direction next time
-  digitalWrite(powerPin, HIGH);
+//  digitalWrite(powerPin, HIGH);
   //start collecting
   for (i = 0; i < s; i++) {
     var1 = digitalRead(sensorPin);
@@ -80,8 +79,8 @@ bool detectSec(int s) {
   //stop power supply
   digitalWrite(turntablePin1, LOW);  //防止本段程序结束后引脚处于高定平
   digitalWrite(turntablePin2, LOW);
-  digitalWrite(powerPin, LOW);
-  if (times > 1)
+//  digitalWrite(powerPin, LOW);
+  if (times > 0)
     return true;
   else return false;
 }

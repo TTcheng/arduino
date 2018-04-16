@@ -1,10 +1,9 @@
 /**
-    McrowaveHumanDetectingNode in the room
-
+ *  McrowaveHumanDetectingNode in the room
 */
 const int OneSec = 1000;
 const int HalfSec = 500;
-const char *WAKEUP = "wakeup";
+const char *WAKEUP = "wakeup1";
 const char *COMMAND_ERROR = "commanderror";
 const char *POWER = "power";
 const char *POWER_ON = "power1_on";

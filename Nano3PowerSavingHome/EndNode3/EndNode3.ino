@@ -4,7 +4,7 @@
 */
 const int OneSec = 1000;
 const int HalfSec = 500;
-const char *WAKEUP = "wakeup";
+const char *WAKEUP = "wakeup3";
 const char *COMMAND_ERROR = "commanderror";
 const char *POWER = "power";
 const char *POWER_ON = "power3_on";

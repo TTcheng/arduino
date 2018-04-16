@@ -9,8 +9,6 @@ void setup() {
   // put your setup code here, to run once:
   pinMode(LED_BUILTIN, OUTPUT);
   pinMode(sensorPin, INPUT);
-  pinMode(powerPin1, OUTPUT);
-  pinMode(powerPin2, OUTPUT);
   Serial.begin(9600);
 }
 
@@ -20,35 +18,10 @@ void loop() {
   delay(5000);
 }
 void detecting() {
-  values = 0;
-  if (clockwise) {
-    digitalWrite(powerPin1, HIGH);
-    digitalWrite(powerPin1, LOW);
+  if (digitalRead(sensorPin) == HIGH) {
+    Serial.write("yes");
   } else {
-    digitalWrite(powerPin1, LOW);
-    digitalWrite(powerPin1, HIGH);
+    Serial.write("no");
   }
-  int i;
-  for (i = 0; i < 10; i++) {
-    delay(1000);
-    if (digitalRead(sensorPin) == HIGH) {
-      values++;
-    }
-  }
-  clockwise = !clockwise;
-  digitalWrite(powerPin1, LOW);
-  digitalWrite(powerPin1, LOW);
-
-  if (values > 0) {
-    digitalWrite(LED_BUILTIN, HIGH);
-    Serial.write("Human");
-    delay(10000);
-    digitalWrite(LED_BUILTIN, LOW);
-  } else {
-    Serial.write("None");
-    delay(10000);
-
-  }
-  Serial.println();
 }
 
